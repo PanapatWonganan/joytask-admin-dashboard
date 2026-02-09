@@ -132,6 +132,7 @@ interface RoleDistribution {
   name: string;
   value: number;
   color: string;
+  [key: string]: string | number;
 }
 
 export default function DashboardPage() {
