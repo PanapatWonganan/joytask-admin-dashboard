@@ -1,4 +1,4 @@
-FROM php:8.4-fpm
+FROM php:8.4-cli
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -9,9 +9,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     zip \
-    unzip \
-    nginx \
-    supervisor
+    unzip
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -31,19 +29,12 @@ COPY . /var/www
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Copy nginx configuration
-COPY docker/nginx.conf /etc/nginx/sites-available/default
-
-# Copy supervisor configuration
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 # Set permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage \
+RUN chmod -R 755 /var/www/storage \
     && chmod -R 755 /var/www/bootstrap/cache
 
-# Expose port
+# Expose port (Railway will set PORT env)
 EXPOSE 8080
 
-# Start supervisor (manages nginx + php-fpm)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start Laravel using built-in server
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
